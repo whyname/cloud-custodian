@@ -385,7 +385,7 @@ class Tag(Action):
                     self.manager.data,))
         return self
 
-    def process(self, resources):
+    def process(self, resources, region=None):
         # Legacy
         msg = self.data.get('msg')
         msg = self.data.get('value') or msg
@@ -407,8 +407,10 @@ class Tag(Action):
         self.interpolate_values(tags)
 
         batch_size = self.data.get('batch_size', self.batch_size)
-
-        client = self.get_client()
+        
+        if region is None:
+            client = self.get_client()
+        client = self.get_client(region)
         _common_tag_processer(
             self.executor_factory, batch_size, self.concurrency, client,
             self.process_resource_set, self.id_key, resources, tags, self.log)
@@ -436,9 +438,11 @@ class Tag(Action):
         for t in tags:
             t['Value'] = self.interpolate_single_value(t['Value'])
 
-    def get_client(self):
+    def get_client(self, region=None):
+        if region is None:
+            region = self.manager.config.region
         return utils.local_session(self.manager.session_factory).client(
-            self.manager.resource_type.service)
+            self.manager.resource_type.service, region_name=region)
 
 
 class RemoveTag(Action):

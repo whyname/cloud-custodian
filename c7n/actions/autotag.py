@@ -172,14 +172,15 @@ class AutoTagUser(EventAction):
         if principal_id_key and user_info['id']:
             new_tags[principal_id_key] = user_info['id']
 
+        region = event['detail']['awsRegion']
         if new_tags:
-            self.set_resource_tags(new_tags, untagged_resources)
+            self.set_resource_tags(new_tags, untagged_resources, region)
         return new_tags
 
-    def set_resource_tags(self, tags, resources):
+    def set_resource_tags(self, tags, resources, region):
         tag_action = self.manager.action_registry.get('tag')
         for key, value in tags.items():
-            tag_action({'key': key, 'value': value}, self.manager).process(resources)
+            tag_action({'key': key, 'value': value}, self.manager).process(resources, region)
 
     @classmethod
     def register_resource(cls, registry, resource_class):
